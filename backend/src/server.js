@@ -31,11 +31,12 @@ if (process.env.NODE_ENV === "production") {
 //  Database Connection
 connectDB().then(() => {
   console.log("Database connected successfully");
-  app.listen(3000, (err) => {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, (err) => {
     if (err) {
       console.error("Failed to start server:", err);
       process.exit(1);
     }
-    console.log("Server running on port 3000");
+    console.log(`Server running on port ${PORT}`);
   });
 });
