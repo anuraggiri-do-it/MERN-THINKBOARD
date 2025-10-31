@@ -4,9 +4,8 @@ import { Link, useNavigate } from "react-router";
 import { useAuth } from "../lib/auth";
 import api from "../lib/axios";
 
-const SignupPage = () => {
+const LoginPage = () => {
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     password: "",
   });
@@ -17,21 +16,18 @@ const SignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.username || !formData.email || !formData.password) {
+    if (!formData.email || !formData.password) {
       return toast.error("All fields are required");
-    }
-    if (formData.password.length < 6) {
-      return toast.error("Password must be at least 6 characters long");
     }
 
     setLoading(true);
     try {
-      const res = await api.post("/auth/signup", formData);
+      const res = await api.post("/auth/login", formData);
       login(res.data.token, res.data.user);
-      toast.success("Account created successfully!");
+      toast.success("Login successful!");
       navigate("/");
     } catch (error) {
-      toast.error(error.response?.data?.message || "Signup failed");
+      toast.error(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -43,21 +39,8 @@ const SignupPage = () => {
         <div className="max-w-md mx-auto">
           <div className="card bg-base-100">
             <div className="card-body">
-              <h2 className="card-title text-2xl mb-4 text-center">Create Account</h2>
+              <h2 className="card-title text-2xl mb-4 text-center">Welcome Back</h2>
               <form onSubmit={handleSubmit}>
-                <div className="form-control mb-4">
-                  <label className="label">
-                    <span className="label-text">Username</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter username"
-                    className="input input-bordered"
-                    value={formData.username}
-                    onChange={(e) => setFormData({...formData, username: e.target.value})}
-                  />
-                </div>
-
                 <div className="form-control mb-4">
                   <label className="label">
                     <span className="label-text">Email</span>
@@ -85,13 +68,13 @@ const SignupPage = () => {
                 </div>
 
                 <button type="submit" className="btn btn-primary w-full mb-4" disabled={loading}>
-                  {loading ? "Creating Account..." : "Sign Up"}
+                  {loading ? "Logging in..." : "Login"}
                 </button>
               </form>
               
               <div className="text-center">
-                <span className="text-sm">Already have an account? </span>
-                <Link to="/login" className="link link-primary text-sm">Login</Link>
+                <span className="text-sm">Don't have an account? </span>
+                <Link to="/signup" className="link link-primary text-sm">Sign up</Link>
               </div>
             </div>
           </div>
@@ -101,4 +84,4 @@ const SignupPage = () => {
   );
 };
 
-export default SignupPage;
+export default LoginPage

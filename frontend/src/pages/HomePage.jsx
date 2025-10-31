@@ -1,6 +1,6 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
-import axios from "axios";
+import api from "../lib/axios";
 import toast from "react-hot-toast";
 import { Link } from "react-router";
 import { Trash2Icon, EditIcon } from "lucide-react";
@@ -13,7 +13,7 @@ const HomePage = () => {
     if (!window.confirm("Are you sure you want to delete this note?")) return;
     
     try {
-      await axios.delete(`/api/notes/${id}`);
+      await api.delete(`/notes/${id}`);
       setNotes(notes.filter(note => note._id !== id));
       toast.success("Note deleted successfully");
     } catch (error) {
@@ -25,8 +25,7 @@ const HomePage = () => {
   useEffect(() => {
     const fetchNotes = async () => {
       try {
-        const res = await axios.get("/api/notes");
-        console.log(res.data);
+        const res = await api.get("/notes");
         setNotes(res.data);
       } catch (error) {
         console.log("Error fetching notes:", error);
