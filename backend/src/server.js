@@ -5,6 +5,7 @@ import path from "path";
 import express from "express";
 import cors from "cors";
 import notesRoutes from "./routes/notesRoutes.js";
+import AuthRoutes from "./routes/AuthRoute.js";
 import { connectDB } from "../config/db.js";
 const app = express();
 //  Middleware
@@ -20,6 +21,7 @@ if (process.env.NODE_ENV !== "production") {
 app.use(express.json()); //  this middle ware will  parse the json bodies:req.body
 // Routes
 app.use("/api/notes", notesRoutes);
+app.use("/api/auth", AuthRoutes);
 // Serve static assets if in production
 if (process.env.NODE_ENV === "production") {
   app.use(express.static(path.join(__dirname, "../frontend/dist")));
@@ -30,7 +32,7 @@ if (process.env.NODE_ENV === "production") {
 
 //  Database Connection
 connectDB().then(() => {
-  console.log("Database connected successfully");
+  
   const PORT = process.env.PORT || 3000;
   app.listen(PORT, "0.0.0.0", (err) => {
     if (err) {
