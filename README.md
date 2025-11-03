@@ -1,29 +1,150 @@
-# MERN ThinkBoard API Documentation
+# MERN ThinkBoard - Role-Based Access Control (RBAC) Implementation
 
-## Overview
-A full-stack note-taking application built with MongoDB, Express.js, React, and Node.js.
+A full-stack note-taking application built with the MERN stack, featuring comprehensive Role-Based Access Control (RBAC) system.
 
-## Project Structure
+## 🚀 Features
+
+- **User Authentication** - JWT-based login/signup
+- **Role-Based Access Control** - User and Admin roles
+- **Note Management** - Create, read, update, delete notes
+- **Admin Panel** - Manage all users and notes
+- **Responsive Design** - Built with Tailwind CSS and DaisyUI
+
+## 🏗️ Architecture Overview
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    MERN ThinkBoard RBAC                     │
+├─────────────────────────────────────────────────────────────┤
+│  Frontend (React)           │  Backend (Node.js/Express)    │
+│  ┌─────────────────────┐   │  ┌─────────────────────────┐   │
+│  │   Auth Context      │   │  │   Auth Middleware       │   │
+│  │   - JWT Storage     │◄──┼──┤   - Token Verification  │   │
+│  │   - User State      │   │  │   - Role Validation     │   │
+│  └─────────────────────┘   │  └─────────────────────────┘   │
+│  ┌─────────────────────┐   │  ┌─────────────────────────┐   │
+│  │   Route Guards      │   │  │   Protected Routes      │   │
+│  │   - ProtectedRoute  │◄──┼──┤   - /notes/my          │   │
+│  │   - RoleRoute       │   │  │   - /admin/*           │   │
+│  │   - AuthRoute       │   │  │   - /auth/*            │   │
+│  └─────────────────────┘   │  └─────────────────────────┘   │
+│  ┌─────────────────────┐   │  ┌─────────────────────────┐   │
+│  │   Components        │   │  │   Controllers           │   │
+│  │   - AdminPage       │◄──┼──┤   - authController      │   │
+│  │   - HomePage        │   │  │   - noteController      │   │
+│  │   - NavBar          │   │  │   - adminController     │   │
+│  └─────────────────────┘   │  └─────────────────────────┘   │
+└─────────────────────────────┼─────────────────────────────────┘
+                              │
+                    ┌─────────▼─────────┐
+                    │   MongoDB Atlas   │
+                    │   ┌─────────────┐ │
+                    │   │    Users    │ │
+                    │   │ - username  │ │
+                    │   │ - email     │ │
+                    │   │ - password  │ │
+                    │   │ - role      │ │
+                    │   └─────────────┘ │
+                    │   ┌─────────────┐ │
+                    │   │    Notes    │ │
+                    │   │ - title     │ │
+                    │   │ - content   │ │
+                    │   │ - author    │ │
+                    │   │ - createdAt │ │
+                    │   └─────────────┘ │
+                    └───────────────────┘
+```
+
+## 🔐 RBAC Implementation
+
+### Authentication Flow
+```
+User Registration/Login
+         │
+         ▼
+   JWT Token Generated
+         │
+         ▼
+   Token Stored (Frontend)
+         │
+         ▼
+   Role-Based Route Access
+```
+
+### Role Hierarchy
+```
+┌─────────────┐
+│    Admin    │ ── Can access all routes and manage all users/notes
+└─────────────┘
+       │
+       ▼
+┌─────────────┐
+│    User     │ ── Can access personal notes and profile
+└─────────────┘
+```
+
+## 📁 Project Structure
+
 ```
 MERN-THINKBOARD/
 ├── backend/
+│   ├── controllers/
+│   │   ├── authController.js     # Authentication logic
+│   │   ├── noteController.js     # Note CRUD operations
+│   │   └── adminController.js    # Admin-specific operations
+│   ├── middleware/
+│   │   ├── auth.js              # JWT verification
+│   │   └── roleAuth.js          # Role-based authorization
+│   ├── models/
+│   │   ├── User.js              # User schema with roles
+│   │   └── Note.js              # Note schema
+│   ├── routes/
+│   │   ├── auth.js              # Auth routes
+│   │   ├── notes.js             # Note routes
+│   │   └── admin.js             # Admin routes
+│   └── server.js                # Express server setup
+├── frontend/
 │   ├── src/
-│   │   ├── controller/
-│   │   ├── Middleware/
-│   │   ├── model/
-│   │   ├── routes/
-│   │   └── server.js
-│   └── config/
-└── frontend/
+│   │   ├── components/
+│   │   │   └── NavBar.jsx       # Navigation with role-based links
+│   │   ├── lib/
+│   │   │   ├── auth.jsx         # Auth context with role management
+│   │   │   └── axios.js         # API client setup
+│   │   ├── pages/
+│   │   │   ├── HomePage.jsx     # User dashboard
+│   │   │   ├── AdminPage.jsx    # Admin panel
+│   │   │   ├── LoginPage.jsx    # Login form
+│   │   │   ├── SignupPage.jsx   # Signup with role selection
+│   │   │   ├── CreatePage.jsx   # Note creation
+│   │   │   └── NoteDetailPage.jsx
+│   │   └── App.jsx              # Route guards and protection
+│   └── package.json
+└── README.md
 ```
 
-## Setup & Installation
+## 🛠️ Installation & Setup
+
+### Prerequisites
+- Node.js (v14+)
+- MongoDB Atlas account
+- Git
 
 ### Backend Setup
 ```bash
 cd backend
 npm install
-npm start
+```
+
+Create `.env` file:
+```env
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret_key
+PORT=5000
+```
+
+Start backend:
+```bash
+npm run dev
 ```
 
 ### Frontend Setup
@@ -33,332 +154,147 @@ npm install
 npm run dev
 ```
 
-## API Endpoints
+## 🔧 RBAC Implementation Steps
 
-### Base URL
-```
-http://localhost:3000/api
-```
+### Backend Changes
 
-## Authentication APIs
-
-### 1. User Signup
-**POST** `/auth/signup`
-
-**Request Body:**
-```json
-{
-  "username": "testuser",
-  "email": "test@example.com",
-  "password": "password123"
+#### 1. User Model Enhancement
+```javascript
+// Added role field to User schema
+role: {
+  type: String,
+  enum: ['user', 'admin'],
+  default: 'user'
 }
 ```
 
-**Success Response (201):**
-```json
-{
-  "message": "User created successfully",
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "user_id",
-    "username": "testuser",
-    "email": "test@example.com"
-  }
-}
-```
-
-**Error Response (400):**
-```json
-{
-  "message": "User already exists"
-}
-```
-
-### 2. User Login
-**POST** `/auth/login`
-
-**Request Body:**
-```json
-{
-  "email": "test@example.com",
-  "password": "password123"
-}
-```
-
-**Success Response (200):**
-```json
-{
-  "message": "Login successful",
-  "success": true,
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
-  "user": {
-    "_id": "user_id",
-    "username": "testuser",
-    "email": "test@example.com"
-  }
-}
-```
-
-### 3. Verify Token
-**GET** `/auth/verify`
-
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "user": {
-    "_id": "user_id",
-    "username": "testuser",
-    "email": "test@example.com"
-  }
-}
-```
-
-## Notes APIs
-*All notes APIs require authentication token in Authorization header*
-
-### 1. Get All Notes
-**GET** `/notes`
-
-**Headers:**
-```
-Authorization: Bearer <token>
-```
-
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "notes": [
-    {
-      "_id": "note_id",
-      "title": "Note Title",
-      "content": "Note content",
-      "userId": "user_id",
-      "createdAt": "2024-01-01T00:00:00.000Z",
-      "updatedAt": "2024-01-01T00:00:00.000Z"
+#### 2. Role-Based Middleware
+```javascript
+// middleware/roleAuth.js
+const requireRole = (roles) => {
+  return (req, res, next) => {
+    if (!roles.includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied' });
     }
-  ]
-}
+    next();
+  };
+};
 ```
 
-### 2. Get Note by ID
-**GET** `/notes/:id`
+#### 3. Protected Routes
+- `/notes/my` - User's personal notes
+- `/admin/users` - Admin only: All users
+- `/admin/notes` - Admin only: All notes
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
+### Frontend Changes
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "note": {
-    "_id": "note_id",
-    "title": "Note Title",
-    "content": "Note content",
-    "userId": "user_id",
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-}
+#### 1. Auth Context Updates
+```javascript
+// Enhanced to store user role
+const [user, setUser] = useState(() => {
+  const userData = localStorage.getItem('user');
+  return userData ? JSON.parse(userData) : null;
+});
 ```
 
-### 3. Create Note
-**POST** `/notes`
+#### 2. Route Protection Components
+- `ProtectedRoute` - Requires authentication
+- `RoleRoute` - Requires specific role
+- `AuthRoute` - Redirects authenticated users
 
-**Headers:**
-```
-Authorization: Bearer <token>
-Content-Type: application/json
-```
+#### 3. Role-Based UI
+- Admin navigation link (admin only)
+- Role selection in signup form
+- Conditional rendering based on user role
 
-**Request Body:**
-```json
-{
-  "title": "New Note Title",
-  "content": "Note content here"
-}
-```
+## 🎯 Key Features by Role
 
-**Success Response (201):**
-```json
-{
-  "success": true,
-  "message": "Note created successfully",
-  "note": {
-    "_id": "note_id",
-    "title": "New Note Title",
-    "content": "Note content here",
-    "userId": "user_id",
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-}
-```
+### User Role
+- ✅ Create personal notes
+- ✅ View own notes
+- ✅ Edit/delete own notes
+- ✅ User profile management
+- ❌ Cannot access admin panel
 
-### 4. Update Note
-**PUT** `/notes/:id`
+### Admin Role
+- ✅ All user permissions
+- ✅ View all users
+- ✅ View all notes from all users
+- ✅ Delete any note
+- ✅ Access admin dashboard
+- ✅ User management capabilities
 
-**Headers:**
-```
-Authorization: Bearer <token>
-Content-Type: application/json
-```
+## 🔒 Security Features
 
-**Request Body:**
-```json
-{
-  "title": "Updated Note Title",
-  "content": "Updated note content"
-}
-```
+- **JWT Authentication** - Secure token-based auth
+- **Password Hashing** - bcrypt encryption
+- **Role Validation** - Server-side role checking
+- **Route Protection** - Frontend and backend guards
+- **CORS Configuration** - Cross-origin security
+- **Input Validation** - Data sanitization
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "message": "Note updated successfully",
-  "note": {
-    "_id": "note_id",
-    "title": "Updated Note Title",
-    "content": "Updated note content",
-    "userId": "user_id",
-    "createdAt": "2024-01-01T00:00:00.000Z",
-    "updatedAt": "2024-01-01T00:00:00.000Z"
-  }
-}
-```
+## 🚦 API Endpoints
 
-### 5. Delete Note
-**DELETE** `/notes/:id`
+### Authentication
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/login` - User login
 
-**Headers:**
-```
-Authorization: Bearer <token>
-```
+### Notes (User)
+- `GET /api/notes/my` - Get user's notes
+- `POST /api/notes` - Create note
+- `PUT /api/notes/:id` - Update note
+- `DELETE /api/notes/:id` - Delete note
 
-**Success Response (200):**
-```json
-{
-  "success": true,
-  "message": "Note deleted successfully"
-}
-```
+### Admin
+- `GET /api/admin/users` - Get all users
+- `GET /api/admin/notes` - Get all notes
+- `DELETE /api/admin/notes/:id` - Delete any note
 
-## API Testing Examples
+## 🎨 UI Components
 
-### Using cURL
+- **Responsive Design** - Mobile-first approach
+- **DaisyUI Components** - Modern UI elements
+- **Loading States** - User feedback
+- **Error Handling** - Toast notifications
+- **Role Indicators** - Visual role identification
 
-#### 1. Signup
+## 🚀 Deployment
+
+### Backend (Railway/Heroku)
 ```bash
-curl -X POST http://localhost:3000/api/auth/signup \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@example.com","password":"password123"}'
+# Set environment variables
+MONGODB_URI=your_production_db
+JWT_SECRET=your_production_secret
 ```
 
-#### 2. Login
+### Frontend (Vercel/Netlify)
 ```bash
-curl -X POST http://localhost:3000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
+# Build for production
+npm run build
 ```
 
-#### 3. Create Note
-```bash
-curl -X POST http://localhost:3000/api/notes \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  -d '{"title":"Test Note","content":"This is a test note"}'
-```
+## 🤝 Contributing
 
-#### 4. Get All Notes
-```bash
-curl -X GET http://localhost:3000/api/notes \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
-```
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/rbac-enhancement`)
+3. Commit changes (`git commit -m 'Add RBAC feature'`)
+4. Push to branch (`git push origin feature/rbac-enhancement`)
+5. Open Pull Request
 
-#### 5. Update Note
-```bash
-curl -X PUT http://localhost:3000/api/notes/NOTE_ID \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-  -d '{"title":"Updated Title","content":"Updated content"}'
-```
+## 📝 License
 
-#### 6. Delete Note
-```bash
-curl -X DELETE http://localhost:3000/api/notes/NOTE_ID \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
-```
+This project is licensed under the MIT License.
 
-## Authentication Flow
+## 🔮 Future Enhancements
 
-1. **User Registration**: POST `/auth/signup` with user details
-2. **User Login**: POST `/auth/login` with email/password
-3. **Receive Token**: Server returns JWT token
-4. **Access Protected Routes**: Include token in Authorization header
-5. **Token Verification**: Server validates token for each protected request
+- [ ] Multiple role levels (moderator, super-admin)
+- [ ] Permission-based access control
+- [ ] Audit logging
+- [ ] Real-time notifications
+- [ ] Advanced user management
+- [ ] API rate limiting
+- [ ] Two-factor authentication
 
-## Error Responses
+---
 
-### Common Error Codes
-- **400**: Bad Request - Invalid input data
-- **401**: Unauthorized - Missing or invalid token
-- **404**: Not Found - Resource not found
-- **500**: Internal Server Error - Server error
-
-### Error Response Format
-```json
-{
-  "message": "Error description",
-  "success": false
-}
-```
-
-## Environment Variables
-
-Create `.env` file in backend directory:
-```env
-MONGO_URI=your_mongodb_connection_string
-PORT=3000
-JWT_SECRET=your_jwt_secret_key
-```
-
-## Technologies Used
-
-### Backend
-- Node.js
-- Express.js
-- MongoDB with Mongoose
-- JWT for authentication
-- bcrypt for password hashing
-
-### Frontend
-- React.js
-- Vite
-- Tailwind CSS
-
-## Development Notes
-
-- Server runs on port 3000 by default
-- Frontend development server runs on port 5173
-- CORS is enabled for development
-- JWT tokens expire in 3 days
-- All notes APIs require authentication
-- Passwords are hashed using bcrypt
-
-## Production Deployment
-
-For production deployment:
-1. Set `NODE_ENV=production`
-2. Build frontend: `npm run build`
-3. Server will serve static files from `frontend/dist`
-4. Update CORS settings for production domain
+**Built with  using MERN Stack + RBAC**

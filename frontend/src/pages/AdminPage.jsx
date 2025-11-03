@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
-import { Link } from "react-router";
-import { Trash2Icon, EditIcon } from "lucide-react";
+import { Trash2Icon, EyeIcon } from "lucide-react";
 
-const HomePage = () => {
+const AdminPage = () => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,32 +16,30 @@ const HomePage = () => {
       setNotes(notes.filter(note => note._id !== id));
       toast.success("Note deleted successfully");
     } catch (error) {
-      console.log("Error deleting note:", error);
       toast.error("Failed to delete note");
     }
   };
 
   useEffect(() => {
-    const fetchNotes = async () => {
+    const fetchAllNotes = async () => {
       try {
-        const res = await api.get("/notes/my");
+        const res = await api.get("/notes/all");
         setNotes(res.data);
       } catch (error) {
-        console.log("Error fetching notes:", error);
         toast.error("Failed to load notes");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchNotes();
+    fetchAllNotes();
   }, []);
 
   return (
     <div className="min-h-screen">
       <NavBar />
       <div className="max-w-7xl mx-auto p-4 mt-6">
-        <h1 className="text-3xl font-bold mb-6 text-base-content">My Notes</h1>
+        <h1 className="text-3xl font-bold mb-6 text-base-content">Admin Panel - All Notes</h1>
         
         {loading ? (
           <div className="flex justify-center items-center h-64">
@@ -51,23 +48,21 @@ const HomePage = () => {
         ) : notes.length === 0 ? (
           <div className="text-center text-base-content text-lg">No notes found</div>
         ) : (
-          
           <div className="flex flex-wrap gap-6">
             {notes.map((note) => (
               <div key={note._id} className="card w-96 bg-base-200 shadow-lg hover:shadow-xl transition-shadow">
-                <div className="h-2 bg-primary rounded-t-lg"></div>
+                <div className="h-2 bg-error rounded-t-lg"></div>
                 <div className="card-body">
                   <h2 className="card-title text-base-content text-lg font-semibold">{note.title}</h2>
                   <p className="text-base-content opacity-70 text-sm line-clamp-3">{note.content}</p>
+                  <div className="text-xs text-primary font-medium">
+                    By: {note.user?.username || 'Unknown User'}
+                  </div>
                   <div className="flex justify-between items-center mt-4">
                     <div className="text-xs text-base-content opacity-50">
                       {new Date(note.createdAt).toLocaleDateString()}
                     </div>
                     <div className="flex gap-2">
-                      <Link to={`/note/${note._id}`} className="btn btn-sm btn-primary">
-                        <EditIcon className="w-4 h-4" />
-                        Edit
-                      </Link>
                       <button 
                         onClick={() => handleDelete(note._id)}
                         className="btn btn-sm btn-error"
@@ -86,4 +81,5 @@ const HomePage = () => {
     </div>
   );
 };
-export default HomePage;
+
+export default AdminPage;

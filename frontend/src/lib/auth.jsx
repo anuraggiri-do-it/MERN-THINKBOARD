@@ -11,7 +11,12 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    const userData = localStorage.getItem('user');
+    if (token && userData) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      setUser(JSON.parse(userData));
+      setLoading(false);
+    } else if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       verifyToken();
     } else {
@@ -33,12 +38,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
+    localStorage.setItem('user', JSON.stringify(userData));
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('user');
     delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };

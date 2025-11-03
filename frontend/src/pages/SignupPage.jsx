@@ -9,6 +9,7 @@ const SignupPage = () => {
     username: "",
     email: "",
     password: "",
+    role: "user",
   });
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -71,7 +72,7 @@ const SignupPage = () => {
                   />
                 </div>
 
-                <div className="form-control mb-6">
+                <div className="form-control mb-4">
                   <label className="label">
                     <span className="label-text">Password</span>
                   </label>
@@ -82,6 +83,20 @@ const SignupPage = () => {
                     value={formData.password}
                     onChange={(e) => setFormData({...formData, password: e.target.value})}
                   />
+                </div>
+
+                <div className="form-control mb-6">
+                  <label className="label">
+                    <span className="label-text">Role</span>
+                  </label>
+                  <select
+                    className="select select-bordered"
+                    value={formData.role}
+                    onChange={(e) => setFormData({...formData, role: e.target.value})}
+                  >
+                    <option value="user">User</option>
+                    <option value="admin">Admin</option>
+                  </select>
                 </div>
 
                 <button type="submit" className="btn btn-primary w-full mb-4" disabled={loading}>

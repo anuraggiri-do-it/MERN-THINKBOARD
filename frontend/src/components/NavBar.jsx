@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { Plus, LogOut } from "lucide-react";
+import { Plus, LogOut, Shield } from "lucide-react";
 import { useAuth } from "../lib/auth";
 
 const NavBar = () => {
@@ -20,6 +20,14 @@ const NavBar = () => {
             New Note
           </button>
         </Link>
+        {user?.role === 'admin' && (
+          <Link to="/admin">
+            <button className="btn btn-secondary gap-2">
+              <Shield size={20} />
+              Admin Panel
+            </button>
+          </Link>
+        )}
         <button onClick={logout} className="btn btn-ghost gap-2">
           <LogOut size={20} />
           Logout
