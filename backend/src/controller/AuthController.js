@@ -10,15 +10,18 @@ export const signup = async (req, res) => {
     if (existingUser)
       return res.status(400).json({ message: "User already exists" });
 
-    //  Force role to 'user' unless we are  manually creating admins
+    // Check if this email is in admin list or role is explicitly set to admin
+    const adminEmails = process.env.ADMIN_EMAILS?.split(',') || [];
+    const isAdmin = adminEmails.includes(email) || role === "admin";
+
     const user = await User.create({
       username,
       email,
       password,
-      role: role || "user", // safe fallback
+      role: isAdmin ? "admin" : "user",
     });
 
-    const token = createSecretToken({ id: user._id, role: user.role }); // include role
+    const token = createSecretToken(user); // pass user object directly
 
     res.status(201).json({
       message: "User created successfully",
@@ -43,7 +46,7 @@ export const login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Incorrect password" });
 
-    const token = createSecretToken({ id: user._id, role: user.role }); // include role here too
+    const token = createSecretToken(user); // pass user object directly
 
     res.status(200).json({
       message: "Login successful",

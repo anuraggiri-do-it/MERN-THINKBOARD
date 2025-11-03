@@ -13,40 +13,20 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
     if (token && userData) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       setUser(JSON.parse(userData));
-      setLoading(false);
-    } else if (token) {
-      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      verifyToken();
-    } else {
-      setLoading(false);
     }
+    setLoading(false);
   }, []);
-
-  const verifyToken = async () => {
-    try {
-      const res = await api.get('/auth/verify');
-      setUser(res.data.user);
-    } catch (error) {
-      localStorage.removeItem('token');
-      delete api.defaults.headers.common['Authorization'];
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(userData));
-    api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setUser(userData);
   };
 
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    delete api.defaults.headers.common['Authorization'];
     setUser(null);
   };
 

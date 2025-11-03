@@ -2,41 +2,115 @@ import { useState, useEffect } from "react";
 import NavBar from "../components/NavBar";
 import api from "../lib/axios";
 import toast from "react-hot-toast";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Trash2Icon, EditIcon } from "lucide-react";
+import { useAuth } from "../lib/auth";
 
 const HomePage = () => {
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
 
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure you want to delete this note?")) return;
     
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error("Please log in to delete notes");
+        navigate("/login");
+        return;
+      }
+
+      console.log("Deleting note:", id);
       await api.delete(`/notes/${id}`);
       setNotes(notes.filter(note => note._id !== id));
       toast.success("Note deleted successfully");
     } catch (error) {
-      console.log("Error deleting note:", error);
-      toast.error("Failed to delete note");
+      console.error("Error deleting note:", error);
+      
+      if (error.response) {
+        console.error("Error response:", error.response.data);
+        console.error("Error status:", error.response.status);
+        
+        if (error.response.status === 401) {
+          toast.error("Please log in to delete notes");
+          localStorage.removeItem('token');
+          navigate("/login");
+        } else if (error.response.status === 403) {
+          toast.error("You don't have permission to delete this note");
+        } else if (error.response.status === 404) {
+          toast.error("Note not found");
+          // Remove from local state if it doesn't exist
+          setNotes(notes.filter(note => note._id !== id));
+        } else {
+          toast.error(error.response.data?.message || "Failed to delete note");
+        }
+      } else {
+        toast.error("Network error - please check your connection");
+      }
     }
   };
 
   useEffect(() => {
+    if (authLoading) return;
+    
+    if (!user) {
+      toast.error("Please log in to view your notes");
+      navigate("/login");
+      return;
+    }
+
     const fetchNotes = async () => {
       try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          toast.error("Please log in to view your notes");
+          navigate("/login");
+          return;
+        }
+
+        console.log("Fetching user notes...");
         const res = await api.get("/notes/my");
+        console.log("Notes fetched:", res.data.length);
         setNotes(res.data);
       } catch (error) {
-        console.log("Error fetching notes:", error);
-        toast.error("Failed to load notes");
+        console.error("Error fetching notes:", error);
+        
+        if (error.response) {
+          console.error("Error response:", error.response.data);
+          console.error("Error status:", error.response.status);
+          
+          if (error.response.status === 401) {
+            toast.error("Please log in to view your notes");
+            localStorage.removeItem('token');
+            navigate("/login");
+          } else {
+            toast.error(error.response.data?.message || "Failed to load notes");
+          }
+        } else {
+          toast.error("Network error - please check your connection");
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchNotes();
-  }, []);
+  }, [user, authLoading, navigate]);
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
 
   return (
     <div className="min-h-screen">

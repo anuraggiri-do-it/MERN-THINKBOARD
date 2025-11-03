@@ -1,15 +1,23 @@
 import { ArrowLeftIcon } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
 import { Link, useNavigate } from "react-router";
 import api from "../lib/axios";
+import { useAuth } from "../lib/auth";
 
 const CreatePage = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
-
+  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      toast.error("Please log in to create notes");
+      navigate("/login");
+    }
+  }, [user, authLoading, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,20 +29,66 @@ const CreatePage = () => {
 
     setLoading(true);
     try {
-      await api.post("/notes", {
+      // Check if token exists
+      const token = localStorage.getItem('token');
+      if (!token) {
+        toast.error("Please log in to create notes");
+        navigate("/login");
+        return;
+      }
+
+      console.log("Creating note with token:", token ? "Token exists" : "No token");
+      
+      const response = await api.post("/notes", {
         title,
         content,
       });
 
+      console.log("Note created successfully:", response.data);
       toast.success("Note created successfully!");
       navigate("/");
     } catch (error) {
-      console.log("Error creating note", error);
-      toast.error("Failed to create note");
+      console.error("Error creating note:", error);
+      
+      if (error.response) {
+        // Server responded with error status
+        console.error("Error response:", error.response.data);
+        console.error("Error status:", error.response.status);
+        
+        if (error.response.status === 401) {
+          toast.error("Please log in to create notes");
+          localStorage.removeItem('token');
+          navigate("/login");
+        } else if (error.response.status === 500) {
+          toast.error(error.response.data?.message || "Server error occurred");
+        } else {
+          toast.error(error.response.data?.message || "Failed to create note");
+        }
+      } else if (error.request) {
+        // Network error
+        console.error("Network error:", error.request);
+        toast.error("Network error - please check your connection");
+      } else {
+        // Other error
+        console.error("Error:", error.message);
+        toast.error("An unexpected error occurred");
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-base-200 flex items-center justify-center">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to login
+  }
 
   return (
     <div className="min-h-screen bg-base-200">
