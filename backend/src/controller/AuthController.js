@@ -39,23 +39,43 @@ export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email and password are required" });
+    }
+
+    console.log('Login attempt for:', email);
+
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ message: "User not found" });
+    if (!user) {
+      console.log('User not found:', email);
+      return res.status(400).json({ message: "User not found" });
+    }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
+    if (!isMatch) {
+      console.log('Password mismatch for:', email);
       return res.status(400).json({ message: "Incorrect password" });
+    }
 
-    const token = createSecretToken(user); // pass user object directly
+    const token = createSecretToken(user);
+    console.log('Login successful for:', email);
 
     res.status(200).json({
       message: "Login successful",
       success: true,
       token,
-      user,
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role
+      },
     });
   } catch (error) {
     console.error("Login error:", error);
-    res.status(500).json({ message: "Server error" });
+    res.status(500).json({ 
+      message: "Server error",
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 };
