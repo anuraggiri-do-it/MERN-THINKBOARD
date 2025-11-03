@@ -4,14 +4,21 @@ import bcrypt from "bcryptjs";
 
 export const signup = async (req, res) => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, role } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser)
       return res.status(400).json({ message: "User already exists" });
 
-    const user = await User.create({ username, email, password });
-    const token = createSecretToken(user._id);
+    //  Force role to 'user' unless we are  manually creating admins
+    const user = await User.create({
+      username,
+      email,
+      password,
+      role: role || "user", // safe fallback
+    });
+
+    const token = createSecretToken({ id: user._id, role: user.role }); // include role
 
     res.status(201).json({
       message: "User created successfully",
@@ -36,7 +43,8 @@ export const login = async (req, res) => {
     if (!isMatch)
       return res.status(400).json({ message: "Incorrect password" });
 
-    const token = createSecretToken(user._id);
+    const token = createSecretToken({ id: user._id, role: user.role }); // include role here too
+
     res.status(200).json({
       message: "Login successful",
       success: true,
