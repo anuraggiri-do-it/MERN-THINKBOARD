@@ -33,6 +33,20 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
+// ✅ API Info route
+app.get("/api", (req, res) => {
+  res.json({
+    message: "MERN ThinkBoard API",
+    version: "1.0.0",
+    endpoints: {
+      health: "/health",
+      auth: "/api/auth (POST /signup, /login)",
+      notes: "/api/notes (GET /my, POST /, PUT /:id, DELETE /:id)",
+      admin: "/api/admin (GET /notes/all)"
+    }
+  });
+});
+
 // ✅ Core Routes
 app.use("/api/notes", notesRoutes);
 app.use("/api/auth", AuthRoutes);
@@ -45,10 +59,40 @@ if (process.env.NODE_ENV === "production") {
   console.log("✅ __dirname:", __dirname);
   
   app.use(express.static(frontendPath));
+  
+  // Catch-all handler for frontend routes
   app.get("*", (req, res) => {
+    // Skip API routes
+    if (req.path.startsWith('/api/')) {
+      return res.status(404).json({ message: "API endpoint not found" });
+    }
+    
     const indexPath = path.join(frontendPath, "index.html");
     console.log("✅ Serving index.html from:", indexPath);
-    res.sendFile(indexPath);
+    
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error("❌ Error serving index.html:", err.message);
+        res.status(200).json({
+          message: "MERN ThinkBoard API is running!",
+          status: "success",
+          endpoints: {
+            health: "/health",
+            auth: "/api/auth",
+            notes: "/api/notes",
+            admin: "/api/admin"
+          }
+        });
+      }
+    });
+  });
+} else {
+  // Development fallback
+  app.get("*", (req, res) => {
+    res.json({
+      message: "MERN ThinkBoard API - Development Mode",
+      frontend: "Run 'npm run dev' in frontend folder"
+    });
   });
 }
 
