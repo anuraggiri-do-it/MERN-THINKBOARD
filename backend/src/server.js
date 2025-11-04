@@ -31,36 +31,18 @@ app.use(express.static(path.join(__dirname, "frontend/dist")));
 
 // Serve React app for all non-API routes
 app.get("*", (req, res) => {
-  const indexPath = path.join(__dirname, "frontend/dist/index.html");
-  if (require('fs').existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    res.json({
-      message: "MERN ThinkBoard API is running!",
-      status: "success",
-      note: "Frontend files not found",
-      endpoints: {
-        health: "/health",
-        auth: "/api/auth",
-        notes: "/api/notes",
-        admin: "/api/admin"
-      }
-    });
-  }
+  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
 });
 
-// ✅ Global Error Handler
+// Global Error Handler
 app.use((err, req, res, next) => {
   console.error("Error:", err.message);
   res.status(500).json({
-    message:
-      process.env.NODE_ENV === "development"
-        ? err.message
-        : "Internal server error",
+    message: process.env.NODE_ENV === "development" ? err.message : "Internal server error"
   });
 });
 
-// ✅ Database Connection + Server Start
+// Database Connection + Server Start
 connectDB()
   .then(() => {
     const PORT = process.env.PORT || 3000;
