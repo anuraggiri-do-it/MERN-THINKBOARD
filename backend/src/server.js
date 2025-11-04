@@ -54,38 +54,75 @@ app.use("/api/admin", adminRoutes);
 
 // ✅ Serve frontend (production)
 if (process.env.NODE_ENV === "production") {
-  const frontendPath = path.join(__dirname, "frontend/dist");
-  console.log("✅ Frontend path:", frontendPath);
-  console.log("✅ __dirname:", __dirname);
+  // Try multiple possible paths
+  const possiblePaths = [
+    path.join(__dirname, "frontend/dist"),
+    path.join(__dirname, "../frontend/dist"),
+    path.join(__dirname, "dist")
+  ];
   
-  app.use(express.static(frontendPath));
-  
-  // Catch-all handler for frontend routes
-  app.get("*", (req, res) => {
-    // Skip API routes
-    if (req.path.startsWith('/api/')) {
-      return res.status(404).json({ message: "API endpoint not found" });
-    }
-    
-    const indexPath = path.join(frontendPath, "index.html");
-    console.log("✅ Serving index.html from:", indexPath);
-    
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        console.error("❌ Error serving index.html:", err.message);
-        res.status(200).json({
-          message: "MERN ThinkBoard API is running!",
-          status: "success",
-          endpoints: {
-            health: "/health",
-            auth: "/api/auth",
-            notes: "/api/notes",
-            admin: "/api/admin"
-          }
-        });
+  let frontendPath = null;
+  for (const testPath of possiblePaths) {
+    try {
+      if (require('fs').existsSync(testPath)) {
+        frontendPath = testPath;
+        break;
       }
+    } catch (e) {}
+  }
+  
+  console.log("✅ __dirname:", __dirname);
+  console.log("✅ Frontend path found:", frontendPath);
+  console.log("✅ All possible paths:", possiblePaths);
+  
+  if (frontendPath) {
+    app.use(express.static(frontendPath));
+    
+    // Catch-all handler for frontend routes
+    app.get("*", (req, res) => {
+      // Skip API routes
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: "API endpoint not found" });
+      }
+      
+      const indexPath = path.join(frontendPath, "index.html");
+      console.log("✅ Serving index.html from:", indexPath);
+      
+      res.sendFile(indexPath, (err) => {
+        if (err) {
+          console.error("❌ Error serving index.html:", err.message);
+          res.status(200).json({
+            message: "MERN ThinkBoard API is running!",
+            status: "success",
+            endpoints: {
+              health: "/health",
+              auth: "/api/auth",
+              notes: "/api/notes",
+              admin: "/api/admin"
+            }
+          });
+        }
+      });
     });
-  });
+  } else {
+    console.log("❌ No frontend files found, serving API only");
+    app.get("*", (req, res) => {
+      if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ message: "API endpoint not found" });
+      }
+      res.status(200).json({
+        message: "MERN ThinkBoard API is running!",
+        status: "success",
+        note: "Frontend files not found",
+        endpoints: {
+          health: "/health",
+          auth: "/api/auth",
+          notes: "/api/notes",
+          admin: "/api/admin"
+        }
+      });
+    });
+  }
 } else {
   // Development fallback
   app.get("*", (req, res) => {
