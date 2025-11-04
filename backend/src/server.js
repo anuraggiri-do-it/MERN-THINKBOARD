@@ -28,8 +28,8 @@ app.use(
 
 app.use(express.json());
 
-// ✅ Health check route
-app.get("/api/health", (req, res) => {
+// ✅ Health check routes
+app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
