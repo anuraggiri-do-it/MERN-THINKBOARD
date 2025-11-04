@@ -13,125 +13,41 @@ import adminRoutes from "./routes/adminRoutes.js";
 const app = express();
 const __dirname = path.resolve();
 
-// 🌍 CORS setup
-app.use(
-  cors({
-    origin:
-      process.env.NODE_ENV === "production"
-        ? ["https://mern-thinkboard-4g3k.onrender.com"]
-        : ["http://localhost:5173", "http://localhost:3000"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-
+app.use(cors());
 app.use(express.json());
 
-// ✅ Health check routes
-app.get("/health", (req, res) => {
-  res.json({ status: "OK", timestamp: new Date().toISOString() });
-});
-
-// ✅ API Info route
-app.get("/api", (req, res) => {
-  res.json({
-    message: "MERN ThinkBoard API",
-    version: "1.0.0",
-    endpoints: {
-      health: "/health",
-      auth: "/api/auth (POST /signup, /login)",
-      notes: "/api/notes (GET /my, POST /, PUT /:id, DELETE /:id)",
-      admin: "/api/admin (GET /notes/all)"
-    }
-  });
-});
-
-// ✅ Core Routes
+// API Routes
 app.use("/api/notes", notesRoutes);
 app.use("/api/auth", AuthRoutes);
 app.use("/api/admin", adminRoutes);
 
-// ✅ Serve frontend (production)
-if (process.env.NODE_ENV === "production") {
-  // Try multiple possible paths
-  const possiblePaths = [
-    path.join(__dirname, "frontend/dist"),
-    path.join(__dirname, "../frontend/dist"),
-    path.join(__dirname, "dist")
-  ];
-  
-  let frontendPath = null;
-  for (const testPath of possiblePaths) {
-    try {
-      if (require('fs').existsSync(testPath)) {
-        frontendPath = testPath;
-        break;
-      }
-    } catch (e) {}
-  }
-  
-  console.log("✅ __dirname:", __dirname);
-  console.log("✅ Frontend path found:", frontendPath);
-  console.log("✅ All possible paths:", possiblePaths);
-  
-  if (frontendPath) {
-    app.use(express.static(frontendPath));
-    
-    // Catch-all handler for frontend routes
-    app.get("*", (req, res) => {
-      // Skip API routes
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ message: "API endpoint not found" });
-      }
-      
-      const indexPath = path.join(frontendPath, "index.html");
-      console.log("✅ Serving index.html from:", indexPath);
-      
-      res.sendFile(indexPath, (err) => {
-        if (err) {
-          console.error("❌ Error serving index.html:", err.message);
-          res.status(200).json({
-            message: "MERN ThinkBoard API is running!",
-            status: "success",
-            endpoints: {
-              health: "/health",
-              auth: "/api/auth",
-              notes: "/api/notes",
-              admin: "/api/admin"
-            }
-          });
-        }
-      });
-    });
+// Health check
+app.get("/health", (req, res) => {
+  res.json({ status: "OK" });
+});
+
+// Serve static files from frontend/dist
+app.use(express.static(path.join(__dirname, "frontend/dist")));
+
+// Serve React app for all non-API routes
+app.get("*", (req, res) => {
+  const indexPath = path.join(__dirname, "frontend/dist/index.html");
+  if (require('fs').existsSync(indexPath)) {
+    res.sendFile(indexPath);
   } else {
-    console.log("❌ No frontend files found, serving API only");
-    app.get("*", (req, res) => {
-      if (req.path.startsWith('/api/')) {
-        return res.status(404).json({ message: "API endpoint not found" });
+    res.json({
+      message: "MERN ThinkBoard API is running!",
+      status: "success",
+      note: "Frontend files not found",
+      endpoints: {
+        health: "/health",
+        auth: "/api/auth",
+        notes: "/api/notes",
+        admin: "/api/admin"
       }
-      res.status(200).json({
-        message: "MERN ThinkBoard API is running!",
-        status: "success",
-        note: "Frontend files not found",
-        endpoints: {
-          health: "/health",
-          auth: "/api/auth",
-          notes: "/api/notes",
-          admin: "/api/admin"
-        }
-      });
     });
   }
-} else {
-  // Development fallback
-  app.get("*", (req, res) => {
-    res.json({
-      message: "MERN ThinkBoard API - Development Mode",
-      frontend: "Run 'npm run dev' in frontend folder"
-    });
-  });
-}
+});
 
 // ✅ Global Error Handler
 app.use((err, req, res, next) => {
