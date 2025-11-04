@@ -22,4 +22,13 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Environment files
 .env
+
+# Generated CSS files
+frontend/src/output.css
+
+# Documentation files
+*.md
+!README.md
