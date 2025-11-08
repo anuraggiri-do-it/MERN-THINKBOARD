@@ -26,13 +26,7 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK" });
 });
 
-// Serve static files from frontend/dist
-app.use(express.static(path.join(__dirname, "frontend/dist")));
 
-// Serve React app for all non-API routes
-app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "frontend/dist/index.html"));
-});
 
 // Global Error Handler
 app.use((err, req, res, next) => {
@@ -45,7 +39,7 @@ app.use((err, req, res, next) => {
 // Database Connection + Server Start
 connectDB()
   .then(() => {
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, "0.0.0.0", () =>
       console.log(`🚀 Server running on port ${PORT}`)
     );
