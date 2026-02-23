@@ -260,18 +260,21 @@ const [user, setUser] = useState(() => {
 
 ## 🚀 Deployment
 
-### Backend (Railway/Heroku)
-```bash
-# Set environment variables
-MONGODB_URI=your_production_db
-JWT_SECRET=your_production_secret
-```
+###  render deployment 
 
-### Frontend (Vercel/Netlify)
-```bash
-# Build for production
-npm run build
-```
+ Client request → Express server
+                     ├─ /api → backend logic
+                     └─ static files → React UI
+
+
+                     {
+  "scripts": {
+    "install-all": "npm install && cd frontend && npm install",
+    "build": "cd frontend && npm run build",
+    "start": "node backend/server.js"
+  }
+}
+
 
 ## 🤝 Contributing
 
@@ -281,9 +284,6 @@ npm run build
 4. Push to branch (`git push origin feature/rbac-enhancement`)
 5. Open Pull Request
 
-## 📝 License
-
-\
 
 ## 🔮 Future Enhancements
 
